@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
+	import { updated } from '$app/stores';
 
 	const { data }: { data: PageData } = $props();
 	let question = $state(data.question);
@@ -35,17 +36,22 @@
 		id="quizz-form"
 		action="?/nextQuestion"
 		use:enhance={() => {
-			return async ({ result }) => {
+			return async ({ result, update }) => {
 				const data: any = result;
-				question = data.data[0];
 
-				remaining = 30;
+				if (data != null && data.type !== 'redirect') {
+					question = data.data[0];
 
-				const radios = document.getElementsByName("option");
+					remaining = 30;
 
-				for (let index = 0; index < radios.length; index++) {
-					const radio: any = radios[index];
-					radio.checked = false;
+					const radios = document.getElementsByName('option');
+
+					for (let index = 0; index < radios.length; index++) {
+						const radio: any = radios[index];
+						radio.checked = false;
+					}
+				} else {
+					update();
 				}
 			};
 		}}
