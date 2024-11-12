@@ -5,6 +5,7 @@ export const usersTable = pgTable('users_table', {
   name: varchar('name', {length: 256}).notNull(),
   points: integer('points').notNull().default(0),
   questionsAnswered: json('questionsAnswered').default([]),
+  time: integer('time').notNull(),
 });
 
 export const difficultyEnum = pgEnum('difficulty', ['easy', 'medium', 'hard']);

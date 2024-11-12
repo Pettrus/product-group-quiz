@@ -21,7 +21,7 @@ async function getRandomQuestion(idToIgnore: number[] = []) {
 async function getUser(cookies: Cookies) {
     const name = cookies.get('name');
     const user = await db.select().from(usersTable).where(eq(usersTable.name, name!));
-    
+
     return user[0];
 }
 
@@ -44,25 +44,38 @@ export async function load({ cookies }) {
 }
 
 export const actions = {
-	nextQuestion: async ({ request, cookies }) => {
-		const data = await request.formData();
-		const id = data.get('id') as any;
+    nextQuestion: async ({ request, cookies }) => {
+        const data = await request.formData();
+        const id = data.get('id') as any;
         const option = data.get('option') as string;
+        const time = parseInt(data.get('time') as string);
 
         const user = await getUser(cookies);
         const answered = user.questionsAnswered as QuestionAnswered[];
 
-        const question = (await db.select().from(questionsTable).where(eq(questionsTable.id, id)))[0];
-        const qOptions: string[] = JSON.parse(question.options); 
-        const userAnswer = qOptions.findIndex(o => o === option);
-        const correctAnswerPoints = question.answer === userAnswer ? 1 : 0;
-        const fullyAnswered: QuestionAnswered[] = [...answered, {
-            questionId: parseInt(id),
-            answer: qOptions.findIndex(oq => oq === option)
-        }];
+        let correctAnswerPoints: number;
+        let fullyAnswered: QuestionAnswered[]
+
+        if (time === 0) {
+            correctAnswerPoints = 0;
+            fullyAnswered = [...answered, {
+                questionId: parseInt(id),
+                answer: 10
+            }]
+        } else {
+            const question = (await db.select().from(questionsTable).where(eq(questionsTable.id, id)))[0];
+            const qOptions: string[] = JSON.parse(question.options);
+            const userAnswer = qOptions.findIndex(o => o === option);
+            
+            correctAnswerPoints = question.answer === userAnswer ? 2 : 0;
+            fullyAnswered = [...answered, {
+                questionId: parseInt(id),
+                answer: qOptions.findIndex(oq => oq === option)
+            }];
+        }
 
         await db.update(usersTable)
-            .set({ points: user.points + correctAnswerPoints, questionsAnswered: fullyAnswered })
+            .set({ points: user.points + correctAnswerPoints, questionsAnswered: fullyAnswered, time: user.time + time })
             .where(eq(usersTable.id, user.id));
 
         if (answered.length + 1 === TOTAL_QUESTIONS) {
@@ -75,5 +88,5 @@ export const actions = {
             ...nextQuestion,
             answer: undefined
         }
-	}
+    }
 }

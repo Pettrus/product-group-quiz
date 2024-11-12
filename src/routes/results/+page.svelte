@@ -40,7 +40,11 @@
 
 									{#if question.userAnswer === question.answer}
 										<div class="text-green-500">
-											+1 Point
+											+2 Points
+										</div>
+									{:else if question.userAnswer === 10}
+										<div class="text-purple-500">
+											Timeout
 										</div>
 									{:else}
 										<div class="text-red-500">
@@ -62,9 +66,38 @@
 					</div>
 				{:else}
 					<div class="mt-5">
-						{#each data.allUsers as user}
-							<div>
-								{user.name} - {user.points}
+						<div class="flex justify-between my-1">
+							<div class="text-lg font-bold">
+								Name
+							</div>
+
+							<div class="text-lg font-bold mr-2">
+								Points
+							</div>
+						</div>
+						{#each data.allUsers as user, index}
+							<div class="flex justify-between my-1">
+								<div class="text-lg">
+									{user.name}
+								</div>
+
+								<div class="font-bold">
+									{#if index === 0}
+										<span class="text-xl mr-1">🥇</span>
+									{/if}
+
+									{#if index === 1}
+										<span class="text-xl mr-1">🥈</span>
+									{/if}
+
+									{#if index === 2}
+										<span class="text-xl mr-1">🥉</span>
+									{/if}
+
+									{user.points}
+
+									<span class="text-xs">({user.time}s)</span>
+								</div>
 							</div>
 						{/each}
 					</div>

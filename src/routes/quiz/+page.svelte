@@ -1,9 +1,28 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
-	export let data: PageData;
-    $: question = data.question;
+	const { data }: { data: PageData } = $props();
+	let question = $state(data.question);
+	let remaining = $state(30);
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			remaining -= 1;
+
+			if (remaining === 0) {
+				clearInterval(interval);
+
+				const form: any = document.getElementById('quizz-form');
+				form?.submit();
+			}
+		}, 1000);
+
+		return () => {
+			clearInterval(interval);
+		};
+	});
 </script>
 
 <svelte:head>
@@ -13,11 +32,21 @@
 <section>
 	<form
 		method="POST"
+		id="quizz-form"
 		action="?/nextQuestion"
 		use:enhance={() => {
-			return async ({ result, update }) => {
-				console.log('RESULT', result);
-				update();
+			return async ({ result }) => {
+				const data: any = result;
+				question = data.data[0];
+
+				remaining = 30;
+
+				const radios = document.getElementsByName("option");
+
+				for (let index = 0; index < radios.length; index++) {
+					const radio: any = radios[index];
+					radio.checked = false;
+				}
 			};
 		}}
 	>
@@ -25,12 +54,21 @@
 			<div class="card-body">
 				<h2 class="card-title">{question.question}</h2>
 
-                <input type="hidden" name="id" value={question.id} />
+				<div class="text-right text-lg font-bold">{remaining}⏳</div>
+
+				<input type="hidden" name="id" value={question.id} />
+				<input type="hidden" name="time" id="time" value={remaining} />
 
 				{#each JSON.parse(question.options) as option}
 					<div class="form-control">
 						<label class="label cursor-pointer">
-							<input type="radio" name="option" class="radio" value={option} />
+							<input
+								type="radio"
+								name="option"
+								class="radio"
+								value={option}
+								required={remaining > 0}
+							/>
 							<span class="label-text">{option}</span>
 						</label>
 					</div>

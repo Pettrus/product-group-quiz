@@ -26,10 +26,11 @@ export async function load({ cookies }) {
     const allUsers = await db
         .select({
             name: usersTable.name,
-            points: usersTable.points
+            points: usersTable.points,
+            time: usersTable.time
         })
         .from(usersTable)
-        .orderBy(desc(usersTable.points));
+        .orderBy(desc(usersTable.points), desc(usersTable.time));
 
     const questionsDB = await db
         .select({
